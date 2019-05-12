@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*- 
-# # 学生管理系统v3.0 
+# # 学生管理系统v0.4
 import os 
+import pymysql
+
 #定义学生类 
 class Student: 
     #类似java的构造器 
@@ -13,69 +15,86 @@ class Student:
         #msg = "{'id':" + "'"+self.id +"'"+ ",'name':" + "'" +self.name + "'" + ",'age':" + "'" + self.age+"'}" 
         msg = "学生信息：id=" + self.id + ",name=" + self.name + ",age=" + self.age 
         return msg 
-    
-    #获取id 
+        #获取id 
     def getId(self): 
         return self.id 
-    
     #获取name 
     def getName(self): 
         return self.name 
-   
     #获取age 
     def getAge(self): 
         return self.age 
-    
     #设置name
     def setName(self,name): 
         self.name = name 
-    
     #设置age 
     def setAge(self,age): 
         self.age = age 
-    
     # 添加学生信息 
-    def addStu(array): 
-        "添加学生信息" 
-        id = input("请输入学生学号：") 
-        for i in range(len(array)): 
-            stu2 = array[i] 
-            if id == stu2.getId(): 
-                print("该学号已存在，不能重复添加") 
-                return 
-        name = input("请输入学生姓名：") 
-        age = input("请输入学生年龄：") 
-        stu = Student(id,name,age) 
-        array.append(stu) 
-        # 把单个学生添加到总列表中 
-        print("添加成功:",stu) 
+def addStu(array): 
+    "添加学生信息" 
+    id = input("请输入学生学号：") 
+    conn = pymysql.connect(host = 'localhost', port = 3306, db = 'test',user = 'root'password = '123456', charset = 'utf8')
+    #真实环境中不要这样写代码，应该把密码账户写入配置文件，并且把配置文件设置为不可见
+    cursor = conn.sursor()
+    params = [id]
+    sql = 'select * from stu where id =%s'
+    cursor.execute(sql,params)
+    stu = cursor.fetchone()
+    print("sql 返回值:",stu)
+    if stu:
+        if id == stu[0]:
+            print("该学号已经存在，不能重复添加")
+        conn.close()
+        return
+    
+    name = input("请输入学生姓名：") 
+    age = input("请输入学生年龄：") 
+    params = [id,name,age]
+    sql = "insert into stu(id,name,age) value(%s,%s,%s)"
+    try:
+        cursor.execute(sql,params)
+        conn.commit()
+    except Exception as e:
+        print("执行出错")
+    finally:
+        conn.close()
 
-# 删除学生信息 
+        # 把单个学生添加到总列表中 
+    print("添加成功:",stu) 
+    # 删除学生信息 
 def delStu(array): 
     "删除学生信息" 
     id = input("请输入要删除的学生学号：") 
-    for i in range(len(array)): 
-        stu2 = array[i] 
-        if id == stu2.getId(): 
-            del array[i] 
-            return 0 
-    return 1 
-
+    conn = pymysql.connect(host = 'localhost', port = 3306, db = 'test',user = 'root'password = '123456', charset = 'utf8')
+    cursor = conn.cursor()
+    params = [id]
+    sql = 'delete from stu whiere id = %s'
+    try:
+        cursor.execute(sql,params)
+        conn.commit()
+        conn.close()
+        return 1
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        print(e)
+        return  
 #修改学生信息 
 def updateStu(array): 
     "修改学生信息" 
     id = input("请输入要修改的学生学号：") 
-    for i in range(len(array)): 
-        stu2 = array[i] 
-        if id == stu2.getId(): 
-            name = input("请输入要修改的学生姓名：") 
-            age = input("请输入要修改的学生年龄：") 
-            stu2.setName(name) 
-            stu2.setAge(age) 
-            print("修改成功") 
-            return 
-    print("找不到该学号，没法修改") 
-
+    conn = pymysql.connect(host = 'localhost', port = 3306, db = 'test',user = 'root'password = '123456', charset = 'utf8')
+    cursor = conn.cursor()
+    params = [id]
+    sql = "select * from stu where id=%s"
+    cursor.execute(sql, params)
+    stu = cursor.fetchone()
+    if stu != None:
+        student = Student(stu[0],stu[1],stu[2])
+        print("查询到的学生信息：",student)
+    else:
+        print("查询失败，查不到该学生信息")
 # 查询学生信息 
 def selectStu(array): 
     "查询学生信息" 
@@ -86,13 +105,21 @@ def selectStu(array):
             print("查询到的学生信息：",stu2) 
             return 
     print("查询失败，查不到该学生信息") 
-    return 
-
-#打印学生信息 
+        return 
+    #打印学生信息 
 def printStuInfo(array):
-    for i in range(len(array)): 
-        stu = array[i] 
-        print(stu) 
+    id = input("请输入要查询的学生学号：") 
+    conn = pymysql.connect(host='localhost', port=3306, db='test', user='root', passwd='123456', charset='utf8') 
+    cursor = conn.cursor() 
+    params = [id] 
+    sql = "select * from stu where id=%s" 
+    cursor.execute(sql, params) 
+    stu = cursor.fetchone() 
+    if stu: 
+        student = Student(stu[0],stu[1],stu[2]) 
+        print("查询到的学生信息：",student) 
+    else: 
+        print("查询失败，查不到该学生信息")
 
 print("=="*30) 
 print("欢迎使用学生管理系统") 
