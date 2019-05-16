@@ -1,0 +1,8 @@
+bool
+text
+as
+fruit
+leader
+cheerleader
+cheer
+leadership
